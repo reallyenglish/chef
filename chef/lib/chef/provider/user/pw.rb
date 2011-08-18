@@ -24,8 +24,20 @@ class Chef
       class Pw < Chef::Provider::User
 
         def load_current_resource
-          super
+          begin
+            super
+          rescue Chef::Exceptions::MissingLibrary
+            Chef::Log.debug("ignoring missing ruby-shadow MissingLibrary exception")
+          end
           raise Chef::Exceptions::User, "Could not find binary /usr/sbin/pw for #{@new_resource}" unless ::File.exists?("/usr/sbin/pw")
+          master_password = ::File.open("/etc/master.passwd")
+          master_password.each do |line|
+            case line
+            when /^#{@new_resource.username}:/
+              @current_resource.password(line.chomp.split(':')[1])
+              break
+            end
+          end
         end
 
         def create_user
