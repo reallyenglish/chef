@@ -40,7 +40,7 @@ class Chef
 
           if @new_resource.supports[:status]
             begin
-              if run_command(:command => "#{@init_command} status") == 0
+              if run_command(:command => "#{@init_command} onestatus") == 0
                 @current_resource.running true
                 Chef::Log.debug("#{@new_resource} is running")
               end
