@@ -227,5 +227,24 @@ describe Chef::Provider::User::Pw do
       File.stub!(:exists?).and_return(true)
       lambda { @provider.load_current_resource }.should_not raise_error(Chef::Exceptions::User)
     end
+
+    it "shouldn't raise an error if ruby-shadow is not found" do
+      @provider.stub!(:super).and_raise(Chef::Exceptions::MissingLibrary)
+      lambda { @provider.load_current_resource }.should_not raise_error(Chef::Exceptions::MissingLibrary)
+    end
+    
+    it "should open /etc/master.passwd" do
+    end
+
+    it "should read the password of the user" do
+      # adam:$1$gSQqZb1p$hashed_password/:999:0::0:0:Adam Jacob:/home/adam:/usr/bin/zsh
+      # ~/git/chef/chef/spec/unit/provider/service/freebsd_service_spec.rb
+      @lines = mock("lines")
+      @lines.stub!(:each).and_yield("sshd:*:22:22::0:0:Secure Shell Daemon:/var/empty:/usr/sbin/nologin").
+                          and_yield("adam:$1$gSQqZb1p$hashed_password/:999:0::0:0:Adam Jacob:/home/adam:/usr/bin/zsh")
+      ::File.stub!(:open).and_return(@lines)
+      @current_resource.should_receive(:password)
+      @provider.load_current_resource
+    end
   end
 end
